@@ -10,18 +10,18 @@
     header: align(right)[#context counter(page).display()],
     header-ascent: 2.0em,
   )
-  
-  set text(
-    font: "Charter",
-    size: 10pt,
-  )
-  
+
+  // set text(
+  //   font: "Charter",
+  //   size: 10pt,
+  // )
+
   set par(
     justify: true,
     leading: 0.5em,
     spacing: 1.0em,
   )
-  
+
   body
 }
 
@@ -30,7 +30,7 @@
   set par(spacing: 0.5em)
   align(center)[
     #text(size: 11pt, weight: "bold")[#course - Assignment #number]
-    
+
     #text(size: 10pt)[#name]
 
     #text(size: 10pt)[#date]
@@ -43,11 +43,10 @@
 #let exercise(number: "", title: "", problem: [], solution: []) = {
   // Exercise header (not indented)
   [*Exercise #number:* #emph[#title]]
-  
+
   // Only add problem block if there's content
   if problem != [] {
-    v(0.5em)
-    
+
     // Problem description (not indented)
     // Using a block to allow display math and other block-level content
     block(
@@ -57,12 +56,12 @@
       #problem
     ]
   }
-  
+
   // Add minimal spacing if no problem, normal spacing if there was a problem
   if problem == [] {
     v(0.3em)
   }
-  
+
   // Solution (indented)
   // Using a block with left padding to create the indent effect
   block(
@@ -72,7 +71,7 @@
     #set par(first-line-indent: 0pt)
     #solution
   ]
-  
+
   v(1em)
 }
 
@@ -96,18 +95,49 @@
     inset: (left: -2em),
   )[
     #v(0.5em)
-    
+
     // Label and description at base indentation
     #block[
       #set par(first-line-indent: 0pt)
       #text(weight: "bold")[#label] #description
     ]
-    
+
     // Only add spacing if there's actual content
     #if content != [] {
       v(0.3em)
-      
+
       // Content is indented again (back to solution level)
+      block(
+        inset: (left: 2em),
+      )[
+        #set par(first-line-indent: 0pt)
+        #content
+      ]
+    }
+  ]
+}
+
+// Nested subpart function for subparts within subparts
+// Use this inside a subpart's content to create nested subparts with additional indentation
+// label: the subpart label like "(i)" or "Part 1:"
+// description: optional problem description (will be at current indent level)
+// content: the actual solution content (will be indented further)
+#let nested-subpart(label: "", description: [], content) = {
+  // No negative margin - stays at current indentation level
+  block[
+    #v(0.5em)
+
+    // Label and description at current indentation
+    #block[
+      #set par(first-line-indent: 0pt)
+      #text(weight: "bold")[#label] #description
+    ]
+
+    // Only add spacing if there's actual content
+    #if content != [] {
+      v(0.3em)
+
+      // Content is indented relative to current level
       block(
         inset: (left: 2em),
       )[
