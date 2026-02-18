@@ -6,22 +6,35 @@
 #let setup-document(body) = {
   set page(
     paper: "us-letter",
-    margin: (x: 1in, y: 1in),
+    margin: (x: 0.5in, y: 0.5in),
     header: align(right)[#context counter(page).display()],
-    header-ascent: 2.0em,
+    header-ascent: 1.0em,
   )
 
-  // set text(
-  //   font: "Charter",
-  //   size: 10pt,
-  // )
+  set text(
+    font: "Charter",
+    size: 10pt,
+  )
 
   set par(
     justify: true,
     leading: 0.5em,
     spacing: 1.0em,
   )
+show raw.where(block: true): block.with(
+    fill: luma(240),        // light gray background
+    inset: 8pt,
+    radius: 4pt,
+    width: 100%
+  )
 
+  // Style for inline code (single backticks)
+  show raw.where(block: false): box.with(
+    fill: luma(240),        // light gray background
+    inset: (x: 3pt, y: 0pt),
+    outset: (y: 3pt),
+    radius: 2pt,
+  )
   body
 }
 
@@ -35,7 +48,7 @@
 
     #text(size: 10pt)[#date]
   ]
-  v(1em)
+  v(0em)
 }
 
 // Exercise function with automatic indentation
