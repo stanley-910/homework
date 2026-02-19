@@ -3,6 +3,10 @@
 
 // Document setup function
 // This returns content with the set rules applied
+#import "@preview/finite:0.5.0" as finite: automaton, transition-table
+
+#import "@preview/cetz:0.3.4" as cetz      // ← same for cetz
+
 #let setup-document(body) = {
   set page(
     paper: "us-letter",
@@ -37,6 +41,22 @@ show raw.where(block: true): block.with(
   )
   body
 }
+
+#let styled-automaton(..args) = {
+  set text(font: "New Computer Modern Math", size: 9pt)
+  automaton(..args)
+}
+
+#let styled-transition-table(..args) = {
+  set text(font: "New Computer Modern Math", size: 9pt)
+  transition-table(..args)
+}
+
+#let styled-pda(body) = {
+  set text(font: "New Computer Modern Math", size: 9pt)
+  cetz.canvas(body)
+}
+
 
 // Header function for assignment title and name
 #let assignment-header(course: "", number: "", name: "", date: "") = {
@@ -159,4 +179,85 @@ show raw.where(block: true): block.with(
       ]
     }
   ]
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  rule() + grammar() — CFG Display Template      (Typst ≥ 0.11)
+// ════════════════════════════════════════════════════════════════════
+//
+//  Two ways to pass a rule — both work together:
+//
+//    Plain array  (multi-line only, backward-compatible)
+//      ($S$, $0S$, $1S$, $A$)
+//
+//    rule() helper  (unlocks single-line: option)
+//      rule($S$, $0S$, $1S$, $A$, single-line: true)
+//
+// ════════════════════════════════════════════════════════════════════
+
+// ── Companion helper ─────────────────────────────────────────────────
+#let rule(lhs, ..rest, single-line: false) = (
+  lhs:         lhs,
+  alts:        rest.pos(),
+  single-line: single-line,
+)
+
+// ── Main display function ─────────────────────────────────────────────
+#let grammar(
+  arrow:    $arrow.r$,
+  row-gap:  0.50em,
+  col-gap:  0.75em,
+  rule-gap: 0.75em,
+  ..rules,
+) = {
+  let as-math(x) = if type(x) == str { eval(x, mode: "math") } else { x }
+
+  // Accept both plain arrays (old style) and rule() dicts (new style)
+  let normalise(r) = if type(r) == dictionary { r } else {
+    (lhs: r.at(0), alts: r.slice(1), single-line: false)
+  }
+
+  let cells     = ()
+  let row-guts  = ()
+  let all-rules = rules.pos().map(normalise)
+
+  for (r, rule) in all-rules.enumerate() {
+    let lhs       = as-math(rule.lhs)
+    let alts      = rule.alts
+    let sl        = rule.single-line
+    let last-rule = (r == all-rules.len() - 1)
+
+    if sl {
+      // ── Single-line: join all alternatives as  alt₁ | alt₂ | …
+      let parts = ()
+      for (i, alt) in alts.enumerate() {
+        if i > 0 { parts.push([#h(0.4em)$|$#h(0.4em)]) }
+        parts.push(alt)
+      }
+      cells += (lhs, arrow, parts.join())
+      if not last-rule { row-guts.push(rule-gap) }
+
+    } else {
+      // ── Multi-line: one row per alternative
+      for (i, alt) in alts.enumerate() {
+        cells += (
+          if i == 0 { lhs }   else { [] },
+          if i == 0 { arrow } else { $|$ },
+          alt,
+        )
+        let last-alt = (i == alts.len() - 1)
+        if not (last-rule and last-alt) {
+          row-guts.push(if last-alt { rule-gap } else { row-gap })
+        }
+      }
+    }
+  }
+
+  grid(
+    columns: 3,
+    align:         (right + horizon, center + horizon, left + horizon),
+    column-gutter: col-gap,
+    row-gutter:    row-guts,
+    ..cells,
+  )
 }
